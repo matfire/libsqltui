@@ -30,9 +30,9 @@ func createDatabase(value string) tea.Cmd {
 	return func() tea.Msg {
 		res, err := http.Post(fmt.Sprintf("http://127.0.0.1:8081/v1/namespaces/%s/create", value), "application/json", bytes.NewBuffer([]byte("{}")))
 		if err != nil {
-			return constants.CreatedMsg{}
+			return constants.CreatedMsg{Status: res.StatusCode}
 		}
-		return constants.CreatedMsg{}
+		return constants.CreatedMsg{Status: res.StatusCode}
 	}
 }
 

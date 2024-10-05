@@ -12,7 +12,9 @@ type CreateMsg struct {
 	Value string
 }
 
-type CreatedMsg struct{}
+type CreatedMsg struct {
+	Status int
+}
 
 func SendBackMsg() tea.Cmd {
 	return func() tea.Msg {
