@@ -43,6 +43,8 @@ func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
 			return s, createDatabase(s.input.Value())
+		} else if msg.String() == "esc" {
+			return s, constants.SendBackMsg()
 		} else {
 			break
 		}
