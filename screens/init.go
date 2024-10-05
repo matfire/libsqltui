@@ -24,8 +24,6 @@ const (
 	initialized
 )
 
-type InitNextMsg struct{}
-
 type InitScreen struct {
 	state          InitScreenState
 	sqldStatus     int
@@ -33,9 +31,19 @@ type InitScreen struct {
 	error          error
 }
 
+type InitEndMsg struct {
+	Valid bool
+}
+
+func sendInitEndMsg(valid bool) tea.Cmd {
+	return func() tea.Msg {
+		return InitEndMsg{Valid: valid}
+	}
+}
+
 func checkSqldServer() tea.Msg {
 	c := &http.Client{Timeout: 10 * time.Second}
-	res, err := c.Get("http://locahost:8080/health")
+	res, err := c.Get("http://127.0.0.1:8080/health")
 	if err != nil {
 		// There was an error making our request. Wrap the error we received
 		// in a message and return it.
@@ -51,6 +59,9 @@ func (s InitScreen) Init() tea.Cmd {
 }
 
 func (s InitScreen) View() string {
+	if s.error != nil {
+		return fmt.Sprintf("got this error %v", s.error.Error())
+	}
 	switch s.state {
 	case loading:
 		return fmt.Sprintf("%s checking sqld is running...", s.loadingSpinner.View())
@@ -63,7 +74,6 @@ func (s InitScreen) View() string {
 }
 
 func (s InitScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Printf("updating initscreen")
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
@@ -71,13 +81,10 @@ func (s InitScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		log.Printf("got status message value %v", msg)
 		s.sqldStatus = int(msg)
 		s.state = initialized
-		return s, nil
+		cmd = sendInitEndMsg(msg == 200)
 	case errMsg:
 		s.error = msg
-		return s, nil
-
-	default:
-		log.Printf("default handler")
+	case spinner.TickMsg:
 		s.loadingSpinner, cmd = s.loadingSpinner.Update(msg)
 	}
 	cmds = append(cmds, cmd)
