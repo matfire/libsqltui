@@ -20,7 +20,7 @@
           version = "0.1.0";
           src = ./.;
           module = "github.com/matfire/libsqltui";
-          vendorHash = "sha256-lzMBz4HnISzHU47CM8M/xrs1UiCF+GcsksJoX5H0tSg=";
+          vendorHash = "sha256-cVkroKJlU+s9dIRuNSbKAk0evpwYTSoG6ZvtQzdRUaE=";
         };
  
       });
