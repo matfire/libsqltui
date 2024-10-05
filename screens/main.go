@@ -1,8 +1,6 @@
 package screens
 
 import (
-	"log"
-
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -28,7 +26,6 @@ func (m MainScreen) Update(msg tea.Msg) (MainScreen, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		log.Printf("pressed key %s", msg.String())
 		if msg.String() == "enter" {
 			return m, constants.SendActionSelectMsg(m.actionList.SelectedItem().(constants.ActionItem))
 		}

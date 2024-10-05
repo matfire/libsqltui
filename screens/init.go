@@ -2,7 +2,6 @@ package screens
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -78,7 +77,6 @@ func (s InitScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case statusMsg:
-		log.Printf("got status message value %v", msg)
 		s.sqldStatus = int(msg)
 		s.state = initialized
 		cmd = sendInitEndMsg(msg == 200)
