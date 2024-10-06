@@ -25,3 +25,7 @@ You can also install it using homebrew by running:
 ```
 
 Then you can run it using `libsqltui`
+
+## Developing
+
+In the repo I provided a flake.nix file that can create a devShell for x86 linux; to use it simply run `nix develop`
