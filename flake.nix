@@ -10,7 +10,7 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in {
       devShells.${system}.default = pkgs.mkShell {
-          buildInputs = [pkgs.go];
+          buildInputs = [pkgs.go pkgs.goreleaser];
       };
     };
 }
