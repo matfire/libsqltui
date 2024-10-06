@@ -47,9 +47,9 @@ func (s CreateScreen) View() string {
 	case loadingState:
 		return fmt.Sprintf("%s sending request to sqld server...", s.loadingSpinner.View())
 	case successState:
-		return fmt.Sprintf("Database create successfully")
+		return fmt.Sprintf("Database create successfully\n\n%s", "{esc} to go back")
 	case errorState:
-		return fmt.Sprintf("Database could not be created, sorry")
+		return fmt.Sprintf("Database could not be created, sorry\n\n%s", "{esc} to go back")
 	default:
 		return fmt.Sprintf("This should not happen")
 	}
@@ -65,6 +65,7 @@ func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else if msg.String() == "esc" {
 			if s.state == successState || s.state == errorState {
 				s.state = inputState
+				s.input.Reset()
 				return s, nil
 			}
 			return s, constants.SendBackMsg()
