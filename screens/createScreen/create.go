@@ -57,7 +57,7 @@ func (s CreateScreen) View() string {
 
 func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
@@ -73,6 +73,9 @@ func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			break
 		}
+	case spinner.TickMsg:
+		s.loadingSpinner, cmd = s.loadingSpinner.Update(cmd)
+		cmds = append(cmds, cmd)
 	case constants.CreatedMsg:
 		if msg.Status == 200 {
 			s.state = successState
@@ -82,7 +85,8 @@ func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return s, nil
 	}
 	s.input, cmd = s.input.Update(msg)
-	return s, cmd
+	cmds = append(cmds, cmd)
+	return s, tea.Batch(cmds...)
 }
 
 func NewCreateScreen() CreateScreen {
