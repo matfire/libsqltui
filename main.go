@@ -6,7 +6,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/matfire/libsqltui/constants"
-	"github.com/matfire/libsqltui/screens"
+	createscreen "github.com/matfire/libsqltui/screens/createScreen"
+	deletescreen "github.com/matfire/libsqltui/screens/deleteScreen"
+	initscreen "github.com/matfire/libsqltui/screens/initScreen"
+	mainscreen "github.com/matfire/libsqltui/screens/mainScreen"
 )
 
 type sessionState int
@@ -15,17 +18,19 @@ const (
 	introView sessionState = iota
 	mainView
 	createView
+	deleteView
 )
 
 type model struct {
 	state        sessionState
-	initScreen   screens.InitScreen
-	mainScreen   screens.MainScreen
-	createScreen screens.CreateScreen
+	initScreen   initscreen.InitScreen
+	mainScreen   mainscreen.MainScreen
+	createScreen createscreen.CreateScreen
+	deleteScreen deletescreen.DeleteScreen
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(m.initScreen.Init(), m.createScreen.Init())
+	return tea.Batch(m.initScreen.Init(), m.createScreen.Init(), m.deleteScreen.Init())
 }
 
 func (m model) View() string {
@@ -36,6 +41,8 @@ func (m model) View() string {
 		return m.mainScreen.View()
 	case createView:
 		return m.createScreen.View()
+	case deleteView:
+		return m.deleteScreen.View()
 	}
 	return "no view defined for this state"
 }
@@ -53,14 +60,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.state {
 	case introView:
 		switch msg := msg.(type) {
-		case screens.InitEndMsg:
+		case initscreen.InitEndMsg:
 			if msg.Valid {
 				m.state = mainView
 				return m, m.mainScreen.Init()
 			}
 		}
 		newIntroView, newCmd := m.initScreen.Update(msg)
-		introModel, ok := newIntroView.(screens.InitScreen)
+		introModel, ok := newIntroView.(initscreen.InitScreen)
 		if !ok {
 			panic("could not perform assertion on init model ui")
 		}
@@ -69,10 +76,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case mainView:
 		switch msg := msg.(type) {
 		case constants.ActionSelectMsg:
-			if msg.Item.Id == 1 {
+			switch msg.Item.Id {
+			case 1:
 				m.state = createView
-				return m, nil
+			case 3:
+				m.state = deleteView
 			}
+			return m, nil
 		}
 		m.mainScreen, cmd = m.mainScreen.Update(msg)
 	case createView:
@@ -82,11 +92,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		newCreateView, newCmd := m.createScreen.Update(msg)
-		createModel, ok := newCreateView.(screens.CreateScreen)
+		createModel, ok := newCreateView.(createscreen.CreateScreen)
 		if !ok {
 			panic("could not perform assertion on create model ui")
 		}
 		m.createScreen = createModel
+		cmd = newCmd
+	case deleteView:
+		switch msg.(type) {
+		case constants.BackMsg:
+			m.state = mainView
+			return m, nil
+		}
+		newDeleteView, newCmd := m.deleteScreen.Update(msg)
+		deleteModel, ok := newDeleteView.(deletescreen.DeleteScreen)
+		if !ok {
+			panic("could not perform assertion on delete model ui")
+		}
+		m.deleteScreen = deleteModel
 		cmd = newCmd
 	}
 	cmds = append(cmds, cmd)
@@ -96,9 +119,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func initialModel() model {
 	return model{
 		state:        introView,
-		initScreen:   screens.NewInitScreen(),
-		mainScreen:   screens.NewMainScreen(),
-		createScreen: screens.NewCreateScreen(),
+		initScreen:   initscreen.NewInitScreen(),
+		mainScreen:   mainscreen.NewMainScreen(),
+		createScreen: createscreen.NewCreateScreen(),
+		deleteScreen: deletescreen.NewDeleteScreen(),
 	}
 }
 

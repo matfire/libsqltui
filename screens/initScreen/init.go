@@ -1,4 +1,4 @@
-package screens
+package initscreen
 
 import (
 	"fmt"

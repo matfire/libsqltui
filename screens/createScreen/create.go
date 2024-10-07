@@ -1,4 +1,4 @@
-package screens
+package createscreen
 
 import (
 	"bytes"
