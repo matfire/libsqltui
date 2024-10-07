@@ -61,6 +61,7 @@ func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
+			s.state = loadingState
 			return s, createDatabase(s.input.Value())
 		} else if msg.String() == "esc" {
 			if s.state == successState || s.state == errorState {
