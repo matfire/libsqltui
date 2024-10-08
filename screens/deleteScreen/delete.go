@@ -100,6 +100,12 @@ func (s DeleteScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case spinner.TickMsg:
 		s.loader, cmd = s.loader.Update(msg)
 		cmds = append(cmds, cmd)
+	case DeletedMsg:
+		if msg.success {
+			s.state = successState
+		} else {
+			s.state = errorState
+		}
 	}
 	switch s.state {
 	case inputState:
