@@ -29,15 +29,16 @@ const (
 )
 
 type DeleteScreen struct {
-	state  screenState
-	input  textinput.Model
-	loader spinner.Model
+	state    screenState
+	input    textinput.Model
+	loader   spinner.Model
+	adminUrl string
 }
 
-func deleteDatabase(name string) tea.Cmd {
+func deleteDatabase(adminUrl string, name string) tea.Cmd {
 	return func() tea.Msg {
 		client := &http.Client{}
-		req, err := http.NewRequest("DELETE", fmt.Sprintf("http://127.0.0.1:8081/v1/namespaces/%s", name), nil)
+		req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/v1/namespaces/%s", adminUrl, name), nil)
 		if err != nil {
 			return DeletedMsg{success: false}
 		}
@@ -81,7 +82,7 @@ func (s DeleteScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if key := strings.ToLower(msg.String()); (key == "y" || key == "n") && s.state == confirmState {
 			if key == "y" {
 				s.state = loadingState
-				return s, deleteDatabase(s.input.Value())
+				return s, deleteDatabase(s.adminUrl, s.input.Value())
 			} else {
 				s.state = inputState
 				return s, nil
@@ -110,11 +111,11 @@ func (s DeleteScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return s, tea.Batch(cmds...)
 }
 
-func NewDeleteScreen() DeleteScreen {
+func NewDeleteScreen(adminUrl string) DeleteScreen {
 	i := textinput.New()
 	i.Placeholder = "enter database name to delete"
 	loader := spinner.New()
 	loader.Spinner = spinner.Dot
 	loader.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
-	return DeleteScreen{state: inputState, input: i, loader: loader}
+	return DeleteScreen{state: inputState, input: i, loader: loader, adminUrl: adminUrl}
 }

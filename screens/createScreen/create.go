@@ -25,11 +25,12 @@ type CreateScreen struct {
 	input          textinput.Model
 	loadingSpinner spinner.Model
 	state          screenState
+	adminUrl       string
 }
 
-func createDatabase(value string) tea.Cmd {
+func createDatabase(adminUrl string, name string) tea.Cmd {
 	return func() tea.Msg {
-		res, err := http.Post(fmt.Sprintf("http://127.0.0.1:8081/v1/namespaces/%s/create", value), "application/json", bytes.NewBuffer([]byte("{}")))
+		res, err := http.Post(fmt.Sprintf("%s/v1/namespaces/%s/create", adminUrl, name), "application/json", bytes.NewBuffer([]byte("{}")))
 		if err != nil {
 			return constants.CreatedMsg{Status: res.StatusCode}
 		}
@@ -63,7 +64,7 @@ func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
 			s.state = loadingState
-			return s, createDatabase(s.input.Value())
+			return s, createDatabase(s.adminUrl, s.input.Value())
 		} else if msg.String() == "esc" {
 			if s.state == successState || s.state == errorState {
 				s.state = inputState
@@ -90,7 +91,7 @@ func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return s, tea.Batch(cmds...)
 }
 
-func NewCreateScreen() CreateScreen {
+func NewCreateScreen(adminUrl string) CreateScreen {
 	input := textinput.New()
 	input.Placeholder = "Database Name"
 	input.Focus()
@@ -101,5 +102,6 @@ func NewCreateScreen() CreateScreen {
 		input:          input,
 		state:          inputState,
 		loadingSpinner: s,
+		adminUrl:       adminUrl,
 	}
 }

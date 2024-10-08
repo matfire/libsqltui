@@ -10,6 +10,7 @@ import (
 	deletescreen "github.com/matfire/libsqltui/screens/deleteScreen"
 	initscreen "github.com/matfire/libsqltui/screens/initScreen"
 	mainscreen "github.com/matfire/libsqltui/screens/mainScreen"
+	"github.com/spf13/viper"
 )
 
 type sessionState int
@@ -118,19 +119,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func initialModel() model {
+func initialModel(clientUrl string, adminUrl string) model {
 	return model{
 		state:        introView,
-		initScreen:   initscreen.NewInitScreen(),
+		initScreen:   initscreen.NewInitScreen(clientUrl),
 		mainScreen:   mainscreen.NewMainScreen(),
-		createScreen: createscreen.NewCreateScreen(),
-		deleteScreen: deletescreen.NewDeleteScreen(),
+		createScreen: createscreen.NewCreateScreen(adminUrl),
+		deleteScreen: deletescreen.NewDeleteScreen(adminUrl),
 	}
 }
 
 func main() {
+	viper.SetDefault("CLIENT_ENDPOINT", "http://127.0.0.1:8080")
+	viper.SetDefault("ADMIN_ENDPOINT", "http://127.0.0.1:8081")
+	viper.SetConfigName("config")
+	viper.AddConfigPath("$HOME/.config/libsqltui")
+	viper.AddConfigPath(".")
+	viper.SetEnvPrefix("LST")
+	_ = viper.ReadInConfig()
 	tea.LogToFile("debug.log", "debug")
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+	p := tea.NewProgram(initialModel(viper.GetString("CLIENT_ENDPOINT"), viper.GetString("ADMIN_ENDPOINT")), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("alas, there's been an error: %v", err)
 		os.Exit(1)

@@ -19,7 +19,8 @@ func (e errMsg) Error() string { return e.err.Error() }
 type InitScreenState int
 
 const (
-	loading InitScreenState = iota
+	firstLoad InitScreenState = iota
+	loading
 	initialized
 )
 
@@ -28,6 +29,7 @@ type InitScreen struct {
 	sqldStatus     int
 	loadingSpinner spinner.Model
 	error          error
+	clientUrl      string
 }
 
 type InitEndMsg struct {
@@ -40,21 +42,24 @@ func sendInitEndMsg(valid bool) tea.Cmd {
 	}
 }
 
-func checkSqldServer() tea.Msg {
-	c := &http.Client{Timeout: 10 * time.Second}
-	res, err := c.Get("http://127.0.0.1:8080/health")
-	if err != nil {
-		// There was an error making our request. Wrap the error we received
-		// in a message and return it.
-		return errMsg{err}
+func checkSqldServer(clientUrl string) tea.Cmd {
+	return func() tea.Msg {
+		c := &http.Client{Timeout: 10 * time.Second}
+		res, err := c.Get(fmt.Sprintf("%s/health", clientUrl))
+		if err != nil {
+			// There was an error making our request. Wrap the error we received
+			// in a message and return it.
+			return errMsg{err}
+		}
+		// We received a response from the server. Return the HTTP status code
+		// as a message.
+		return statusMsg(res.StatusCode)
+
 	}
-	// We received a response from the server. Return the HTTP status code
-	// as a message.
-	return statusMsg(res.StatusCode)
 }
 
 func (s InitScreen) Init() tea.Cmd {
-	return tea.Batch(s.loadingSpinner.Tick, checkSqldServer)
+	return tea.Batch(s.loadingSpinner.Tick)
 }
 
 func (s InitScreen) View() string {
@@ -75,6 +80,10 @@ func (s InitScreen) View() string {
 func (s InitScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+	if s.state == firstLoad {
+		s.state = loading
+		return s, checkSqldServer(s.clientUrl)
+	}
 	switch msg := msg.(type) {
 	case statusMsg:
 		s.sqldStatus = int(msg)
@@ -89,12 +98,13 @@ func (s InitScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return s, tea.Batch(cmds...)
 }
 
-func NewInitScreen() InitScreen {
+func NewInitScreen(clientUrl string) InitScreen {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return InitScreen{
-		state:          loading,
+		state:          firstLoad,
 		loadingSpinner: s,
+		clientUrl:      clientUrl,
 	}
 }
