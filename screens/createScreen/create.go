@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/matfire/libsqltui/constants"
 )
 
@@ -74,7 +75,7 @@ func (s CreateScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			break
 		}
 	case spinner.TickMsg:
-		s.loadingSpinner, cmd = s.loadingSpinner.Update(cmd)
+		s.loadingSpinner, cmd = s.loadingSpinner.Update(msg)
 		cmds = append(cmds, cmd)
 	case constants.CreatedMsg:
 		if msg.Status == 200 {
@@ -95,6 +96,7 @@ func NewCreateScreen() CreateScreen {
 	input.Focus()
 	s := spinner.New()
 	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return CreateScreen{
 		input:          input,
 		state:          inputState,

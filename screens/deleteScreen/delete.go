@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/matfire/libsqltui/constants"
 )
 
@@ -69,6 +70,8 @@ func (s DeleteScreen) View() string {
 }
 
 func (s DeleteScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" && s.state == inputState {
@@ -94,24 +97,24 @@ func (s DeleteScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		break
 	case spinner.TickMsg:
-		var cmd tea.Cmd
 		s.loader, cmd = s.loader.Update(msg)
-		return s, cmd
+		cmds = append(cmds, cmd)
 	}
 	switch s.state {
 	case inputState:
+		s.input.Focus()
 		var cmd tea.Cmd
 		s.input, cmd = s.input.Update(msg)
-		return s, cmd
+		cmds = append(cmds, cmd)
 	}
-	return s, nil
+	return s, tea.Batch(cmds...)
 }
 
 func NewDeleteScreen() DeleteScreen {
 	i := textinput.New()
 	i.Placeholder = "enter database name to delete"
-	i.Focus()
 	loader := spinner.New()
 	loader.Spinner = spinner.Dot
+	loader.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("205"))
 	return DeleteScreen{state: inputState, input: i, loader: loader}
 }
