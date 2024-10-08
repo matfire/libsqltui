@@ -30,7 +30,7 @@ type model struct {
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(m.initScreen.Init(), m.createScreen.Init(), m.deleteScreen.Init())
+	return tea.Batch(m.initScreen.Init())
 }
 
 func (m model) View() string {
@@ -79,8 +79,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.Item.Id {
 			case 1:
 				m.state = createView
+				return m, m.createScreen.Init()
 			case 3:
 				m.state = deleteView
+				return m, m.deleteScreen.Init()
 			}
 			return m, nil
 		}
