@@ -8,6 +8,7 @@ import (
 	"github.com/matfire/libsqltui/constants"
 	createscreen "github.com/matfire/libsqltui/screens/createScreen"
 	deletescreen "github.com/matfire/libsqltui/screens/deleteScreen"
+	forkscreen "github.com/matfire/libsqltui/screens/forkScreen"
 	initscreen "github.com/matfire/libsqltui/screens/initScreen"
 	mainscreen "github.com/matfire/libsqltui/screens/mainScreen"
 	"github.com/spf13/viper"
@@ -20,6 +21,7 @@ const (
 	mainView
 	createView
 	deleteView
+	forkView
 )
 
 type model struct {
@@ -28,6 +30,7 @@ type model struct {
 	mainScreen   mainscreen.MainScreen
 	createScreen createscreen.CreateScreen
 	deleteScreen deletescreen.DeleteScreen
+	forkScreen   forkscreen.ForkScreen
 }
 
 func (m model) Init() tea.Cmd {
@@ -44,6 +47,8 @@ func (m model) View() string {
 		return m.createScreen.View()
 	case deleteView:
 		return m.deleteScreen.View()
+	case forkView:
+		return m.forkScreen.View()
 	}
 	return "no view defined for this state"
 }
@@ -81,6 +86,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case 1:
 				m.state = createView
 				return m, m.createScreen.Init()
+			case 2:
+				m.state = forkView
+				return m, m.forkScreen.Init()
 			case 3:
 				m.state = deleteView
 				return m, m.deleteScreen.Init()
@@ -114,6 +122,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.deleteScreen = deleteModel
 		cmd = newCmd
+	case forkView:
+		switch msg.(type) {
+		case constants.BackMsg:
+			m.state = mainView
+			return m, nil
+		}
+		newForkView, newCmd := m.forkScreen.Update(msg)
+		forkModel, ok := newForkView.(forkscreen.ForkScreen)
+		if !ok {
+			panic("could not perform assertion on delete model ui")
+		}
+		m.forkScreen = forkModel
+		cmd = newCmd
 	}
 	cmds = append(cmds, cmd)
 	return m, tea.Batch(cmds...)
@@ -126,6 +147,7 @@ func initialModel(clientUrl string, adminUrl string) model {
 		mainScreen:   mainscreen.NewMainScreen(),
 		createScreen: createscreen.NewCreateScreen(adminUrl),
 		deleteScreen: deletescreen.NewDeleteScreen(adminUrl),
+		forkScreen:   forkscreen.NewForkScreen(adminUrl),
 	}
 }
 
